@@ -1,3 +1,4 @@
+import math
 import tkinter as tk
 from tkinter import messagebox
 
@@ -11,14 +12,20 @@ total_collisions = 0
 total_overflows = 0
 
 hash_table = []
+pages = []
 
 
-def hash_function(key):
-    hash_value = sum(ord(char) for char in key.lower()) % NUM_BUCKETS
-    return hash_value
+def hash_function(word: str):
+    LARGE_PRIME_NUMBER = 65521
 
+    checksum = 0
 
-def add_to_bucket(index, word):
+    for i in range(len(word)):
+        checksum *= LARGE_PRIME_NUMBER
+        checksum += ord(word[i].lower())
+    return checksum % NUM_BUCKETS
+
+def add_to_bucket(index, page):
     global total_collisions, total_overflows
     bucket = hash_table[index]
 
@@ -34,7 +41,7 @@ def add_to_bucket(index, word):
             bucket = new_bucket
             total_overflows += 1  # Incrementa o contador de overflows
 
-    bucket.append(word)
+    bucket.append(page)
 
 
 def load_words(file_path):
@@ -42,21 +49,42 @@ def load_words(file_path):
     words = []
 
     try:
+        # Read words from file
         with open(file_path, "r") as file:
             words = [line.strip() for line in file]
+            
 
         NUM_PAGES = (len(words) + PAGE_SIZE - 1) // PAGE_SIZE
+        
+        pages = [[] for _ in range(NUM_PAGES)]
 
-        NUM_BUCKETS = len(words) * 2
+        # Populate pages
+        page_index = 0
+        for word in words:
+            if len(pages[page_index]) >= PAGE_SIZE:
+                page_index += 1
+            pages[page_index].append(word)
+
+        
+        # Calculate number of buckets
+        NUM_BUCKETS = math.ceil(len(words))
         hash_table = [[] for _ in range(NUM_BUCKETS)]
         BUCKET_LIMIT = FR
 
+        # Metrics counters
         total_collisions = 0
         total_overflows = 0
 
-        for word in words:
-            index = hash_function(word)
-            add_to_bucket(index, word)
+        # Populate buckets
+        for page_number, page in enumerate(pages):
+            for word in page:
+                index = hash_function(word)
+                add_to_bucket(index, (word, page_number))
+
+
+        # for word in words:
+        #     index = hash_function(word)
+        #     add_to_bucket(index, word)
 
         messagebox.showinfo(
             "Carregamento",
@@ -67,28 +95,42 @@ def load_words(file_path):
 
 
 def search_word():
-    word = search_entry.get().strip()
-    index = hash_function(word)
+    wanted_word = search_entry.get().strip()
+    index = hash_function(wanted_word)
     bucket = hash_table[index]
     cost = 0
 
-    while bucket:
-        cost += 1
-        if word in bucket:
+
+
+    for word, page in bucket:
+        if word == wanted_word:
             messagebox.showinfo(
                 "Resultado da Busca",
-                f"Palavra '{word}' encontrada no bucket {index}.\nCusto da busca: {cost} leituras.",
+                f"Palavra '{wanted_word}' encontrada na página: {page}",
+                'Custo da busca: 1 leitura.',
             )
-            return
-        elif isinstance(bucket[-1], list):
-            bucket = bucket[-1]
-        else:
             break
+        print('puts tem n')
 
-    messagebox.showinfo(
-        "Resultado da Busca",
-        f"Palavra '{word}' não encontrada.\nCusto da busca: {cost} leituras.",
-    )
+
+    # while bucket:
+    #     cost += 1
+    #     if word in bucket:
+    #         page = (bucket.index(word) + 1) // PAGE_SIZE + 1
+    #         messagebox.showinfo(
+    #             "Resultado da Busca",
+    #             f"Palavra '{word}' encontrada no bucket {index}.\nCusto da busca: {cost} leituras.\nNúmero da página: {page}",
+    #         )
+    #         return
+    #     elif isinstance(bucket[-1], list):
+    #         bucket = bucket[-1]
+    #     else:
+    #         break
+
+    # messagebox.showinfo(
+    #     "Resultado da Busca",
+    #     f"Palavra '{word}' não encontrada.\nCusto da busca: {cost} leituras.",
+    # )
 
 
 def table_scan():
@@ -181,3 +223,5 @@ scan_button = tk.Button(frame, text="Table Scan", command=table_scan)
 scan_button.pack(side=tk.LEFT, padx=5)
 
 root.mainloop()
+
+print(hash_table)
