@@ -46,7 +46,7 @@ def add_to_bucket(index, page):
 
 
 def load_words(file_path):
-    global hash_table, NUM_BUCKETS, NUM_PAGES, PAGE_SIZE, BUCKET_LIMIT, total_collisions, total_overflows
+    global hash_table, NUM_BUCKETS, NUM_PAGES, PAGE_SIZE, BUCKET_LIMIT, total_collisions, total_overflows, pages
     words = []
 
     try:
@@ -126,39 +126,28 @@ def table_scan():
     found = False
     scan_result = []
     scan_cost = 0
+    global pages
 
-    for bucket_index, bucket in enumerate(hash_table):
-        current_bucket = bucket
-        while current_bucket:
+    for index, entry in enumerate(pages):
+        scan_cost += 1
+
+        for page in entry:
             scan_cost += 1
-            for entry_index, entry in enumerate(current_bucket):
-                if isinstance(entry, list):
-                    continue
 
-                if entry[0] == word:
-                    found = True
-                    scan_result.append(
-                        f"Palavra '{word}' encontrada\nPágina: {entry[1]}."
-                    )
-                    break
-            if found:
-                break
-            if isinstance(current_bucket[-1], list):
-                current_bucket = current_bucket[-1]
-            else:
-                break
+            if word in page:
+                found = True
+                scan_result.append(index)
 
     if found:
         messagebox.showinfo(
-            "Table Scan",
-            f"Palavra '{word}' encontrada após {scan_cost} leituras.\n\n"
-            + "\n".join(scan_result),
+            "Resultado da Busca",
+            f"Palavra '{word}' encontrada.\nCusto da busca: {scan_cost} leituras.\nNúmero da página: {scan_result[0]}",
         )
+
     else:
         messagebox.showinfo(
-            "Table Scan",
-            f"Palavra '{word}' não encontrada após {scan_cost} leituras.\n\n"
-            + "\n".join(scan_result),
+            "Resultado da Busca",
+            f"Palavra '{word}' não encontrada.\nCusto da busca: {scan_cost} leituras.",
         )
 
 
