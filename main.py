@@ -6,7 +6,7 @@ NUM_BUCKETS = 0
 BUCKET_LIMIT = 0
 PAGE_SIZE = 0  # Tamanho das páginas, definido pelo usuário
 NUM_PAGES = 0
-FR = 100  # Número máximo de tuplas endereçadas por bucket
+FR = 2  # Número máximo de tuplas endereçadas por bucket
 
 total_collisions = 0
 total_overflows = 0
@@ -24,6 +24,7 @@ def hash_function(word: str):
         checksum *= LARGE_PRIME_NUMBER
         checksum += ord(word[i].lower())
     return checksum % NUM_BUCKETS
+
 
 def add_to_bucket(index, page):
     global total_collisions, total_overflows
@@ -52,10 +53,9 @@ def load_words(file_path):
         # Read words from file
         with open(file_path, "r") as file:
             words = [line.strip() for line in file]
-            
 
         NUM_PAGES = (len(words) + PAGE_SIZE - 1) // PAGE_SIZE
-        
+
         pages = [[] for _ in range(NUM_PAGES)]
 
         # Populate pages
@@ -65,7 +65,6 @@ def load_words(file_path):
                 page_index += 1
             pages[page_index].append(word)
 
-        
         # Calculate number of buckets
         NUM_BUCKETS = math.ceil(len(words))
         hash_table = [[] for _ in range(NUM_BUCKETS)]
@@ -81,11 +80,6 @@ def load_words(file_path):
                 index = hash_function(word)
                 add_to_bucket(index, (word, page_number))
 
-
-        # for word in words:
-        #     index = hash_function(word)
-        #     add_to_bucket(index, word)
-
         messagebox.showinfo(
             "Carregamento",
             f"Palavras carregadas com sucesso!\nNúmero de páginas: {NUM_PAGES}\nNúmero de buckets: {NUM_BUCKETS}",
@@ -100,37 +94,31 @@ def search_word():
     bucket = hash_table[index]
     cost = 0
 
+    while bucket:
+        cost += 1
 
+        for entry in bucket:
+            if isinstance(entry, list):
+                continue
 
-    for word, page in bucket:
-        if word == wanted_word:
-            messagebox.showinfo(
-                "Resultado da Busca",
-                f"Palavra '{wanted_word}' encontrada na página: {page}",
-                'Custo da busca: 1 leitura.',
-            )
+            if entry[0] == wanted_word:
+                page = entry[1]
+                messagebox.showinfo(
+                    "Resultado da Busca",
+                    f"Palavra '{wanted_word}' encontrada.\nCusto da busca: {cost} leituras.\nNúmero da página: {page}",
+                )
+                return
+
+        if isinstance(bucket[-1], list):
+            bucket = bucket[-1]
+
+        else:
             break
-        print('puts tem n')
 
-
-    # while bucket:
-    #     cost += 1
-    #     if word in bucket:
-    #         page = (bucket.index(word) + 1) // PAGE_SIZE + 1
-    #         messagebox.showinfo(
-    #             "Resultado da Busca",
-    #             f"Palavra '{word}' encontrada no bucket {index}.\nCusto da busca: {cost} leituras.\nNúmero da página: {page}",
-    #         )
-    #         return
-    #     elif isinstance(bucket[-1], list):
-    #         bucket = bucket[-1]
-    #     else:
-    #         break
-
-    # messagebox.showinfo(
-    #     "Resultado da Busca",
-    #     f"Palavra '{word}' não encontrada.\nCusto da busca: {cost} leituras.",
-    # )
+    messagebox.showinfo(
+        "Resultado da Busca",
+        f"Palavra '{wanted_word}' não encontrada.\nCusto da busca: {cost} leituras.",
+    )
 
 
 def table_scan():
@@ -147,10 +135,10 @@ def table_scan():
                 if isinstance(entry, list):
                     continue
 
-                if entry == word:
+                if entry[0] == word:
                     found = True
                     scan_result.append(
-                        f"Palavra '{word}' encontrada no bucket {bucket_index}, entrada {entry_index}."
+                        f"Palavra '{word}' encontrada\nPágina: {entry[1]}."
                     )
                     break
             if found:
@@ -223,5 +211,3 @@ scan_button = tk.Button(frame, text="Table Scan", command=table_scan)
 scan_button.pack(side=tk.LEFT, padx=5)
 
 root.mainloop()
-
-print(hash_table)
