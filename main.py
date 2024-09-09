@@ -26,23 +26,19 @@ def hash_function(word: str):
     return checksum % NUM_BUCKETS
 
 
-def add_to_bucket(index, page):
+def add_to_bucket(index, info_tuple):
     global total_collisions, total_overflows
     bucket = hash_table[index]
 
+    # Colisão: ocorre quando é adicionada uma tupla a um bucket não vazio
     if len(bucket) > 0:
         total_collisions += 1
 
-    while len(bucket) >= BUCKET_LIMIT:
-        if isinstance(bucket[-1], list):
-            bucket = bucket[-1]
-        else:
-            new_bucket = []
-            bucket.append(new_bucket)
-            bucket = new_bucket
-            total_overflows += 1  # Incrementa o contador de overflows
+    # Overflow: Ocorre quando é adicionado uma tupla a um bucket não vazio
+    if len(bucket) >= BUCKET_LIMIT:
+        total_overflows += 1
 
-    bucket.append(page)
+    bucket.append(info_tuple)
 
 
 def load_words(file_path):
@@ -124,12 +120,9 @@ def search_word():
 def table_scan():
     word = search_entry.get().strip()
     found = False
-    scan_result = []
+    scan_page = 0
     scan_cost = 0
     global pages
-
-    scan_cost = 0
-    scan_page = 0
 
 
     for index, page in enumerate(pages):
