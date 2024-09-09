@@ -88,29 +88,16 @@ def search_word():
     wanted_word = search_entry.get().strip()
     index = hash_function(wanted_word)
     bucket = hash_table[index]
-    cost = 0
+    cost = 1
 
-    while bucket:
-        cost += 1
-
-        for entry in bucket:
-            if isinstance(entry, list):
-                continue
-
-            if entry[0] == wanted_word:
-                page = entry[1]
-                messagebox.showinfo(
+    for word, page in bucket:
+        if word == wanted_word:
+            messagebox.showinfo(
                     "Resultado da Busca",
-                    f"Palavra '{wanted_word}' encontrada.\nCusto da busca: {cost} leituras.\nNúmero da página: {page}",
+                    f"Palavra '{wanted_word}' encontrada.\nCusto da busca: {cost} leituras.\nNúmero da página: {page+1}",
                 )
-                return
-
-        if isinstance(bucket[-1], list):
-            bucket = bucket[-1]
-
-        else:
-            break
-
+            return
+        
     messagebox.showinfo(
         "Resultado da Busca",
         f"Palavra '{wanted_word}' não encontrada.\nCusto da busca: {cost} leituras.",
