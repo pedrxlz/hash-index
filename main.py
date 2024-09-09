@@ -3,7 +3,6 @@ import tkinter as tk
 from tkinter import messagebox
 
 NUM_BUCKETS = 0
-BUCKET_LIMIT = 0
 PAGE_SIZE = 0  # Tamanho das páginas, definido pelo usuário
 NUM_PAGES = 0
 FR = 2  # Número máximo de tuplas endereçadas por bucket
@@ -51,14 +50,14 @@ def add_to_bucket(index, info_tuple):
         total_collisions += 1
 
     # Overflow: Ocorre quando é adicionado uma tupla a um bucket não vazio
-    if len(bucket) >= BUCKET_LIMIT:
+    if len(bucket) >= FR:
         total_overflows += 1
 
     bucket.append(info_tuple)
 
 
 def load_words(file_path):
-    global hash_table, NUM_BUCKETS, NUM_PAGES, PAGE_SIZE, BUCKET_LIMIT, total_collisions, total_overflows, pages
+    global hash_table, NUM_BUCKETS, NUM_PAGES, PAGE_SIZE, total_collisions, total_overflows, pages
     words = []
 
     try:
@@ -80,7 +79,7 @@ def load_words(file_path):
         # Calculate number of buckets
         NUM_BUCKETS = next_prime(len(words) * 2)
         hash_table = [[] for _ in range(NUM_BUCKETS)]
-        BUCKET_LIMIT = FR
+        
 
         # Metrics counters
         total_collisions = 0
