@@ -128,20 +128,23 @@ def table_scan():
     scan_cost = 0
     global pages
 
-    for index, entry in enumerate(pages):
+    scan_cost = 0
+    scan_page = 0
+
+
+    for index, page in enumerate(pages):
         scan_cost += 1
 
-        for page in entry:
-            scan_cost += 1
+        if word in page:
+            found = True
+            scan_page = index + 1
+            break
 
-            if word in page:
-                found = True
-                scan_result.append(index)
 
     if found:
         messagebox.showinfo(
             "Resultado da Busca",
-            f"Palavra '{word}' encontrada.\nCusto da busca: {scan_cost} leituras.\nNúmero da página: {scan_result[0]}",
+            f"Palavra '{word}' encontrada.\nCusto da busca: {scan_cost} leituras.\nNúmero da página: {scan_page}",
         )
 
     else:
