@@ -15,6 +15,22 @@ hash_table = []
 pages = []
 
 
+def next_prime(n):
+    def is_prime(k):
+        if k < 2:
+            return False
+        for i in range(2, int(math.sqrt(k)) + 1):
+            if k % i == 0:
+                return False
+        return True
+
+    prime = n
+    while True:
+        prime += 1
+        if is_prime(prime):
+            return prime
+
+
 def hash_function(word: str):
     LARGE_PRIME_NUMBER = 65521
 
@@ -62,7 +78,7 @@ def load_words(file_path):
             pages[page_index].append(word)
 
         # Calculate number of buckets
-        NUM_BUCKETS = math.ceil(len(words))
+        NUM_BUCKETS = next_prime(len(words) * 2)
         hash_table = [[] for _ in range(NUM_BUCKETS)]
         BUCKET_LIMIT = FR
 
@@ -93,11 +109,11 @@ def search_word():
     for word, page in bucket:
         if word == wanted_word:
             messagebox.showinfo(
-                    "Resultado da Busca",
-                    f"Palavra '{wanted_word}' encontrada.\nCusto da busca: {cost} leituras.\nNúmero da página: {page+1}",
-                )
+                "Resultado da Busca",
+                f"Palavra '{wanted_word}' encontrada.\nCusto da busca: {cost} leituras.\nNúmero da página: {page+1}",
+            )
             return
-        
+
     messagebox.showinfo(
         "Resultado da Busca",
         f"Palavra '{wanted_word}' não encontrada.\nCusto da busca: {cost} leituras.",
@@ -111,7 +127,6 @@ def table_scan():
     scan_cost = 0
     global pages
 
-
     for index, page in enumerate(pages):
         scan_cost += 1
 
@@ -119,7 +134,6 @@ def table_scan():
             found = True
             scan_page = index + 1
             break
-
 
     if found:
         messagebox.showinfo(
