@@ -13,6 +13,17 @@ total_overflows = 0
 hash_table = []
 pages = []
 
+def calculate_number_of_buckets(word_count: int):
+    global FR
+
+    # Idealmente o numéro de buckets deve obedecer a seguinte regra:
+    # Número de buckets > Número de palavras / Tuplas por bucket
+
+    num_buckets = (word_count // FR) + 1
+    num_buckets = next_prime(NUM_BUCKETS)
+
+    return num_buckets
+
 
 def next_prime(n):
     def is_prime(k):
@@ -77,7 +88,7 @@ def load_words(file_path):
             pages[page_index].append(word)
 
         # Calculate number of buckets
-        NUM_BUCKETS = next_prime(len(words) * 2)
+        NUM_BUCKETS = calculate_number_of_buckets(len(words))
         hash_table = [[] for _ in range(NUM_BUCKETS)]
         
 
