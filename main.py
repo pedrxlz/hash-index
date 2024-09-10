@@ -5,7 +5,7 @@ from tkinter import messagebox
 NUM_BUCKETS = 0
 PAGE_SIZE = 0  # Tamanho das páginas, definido pelo usuário
 NUM_PAGES = 0
-FR = 2  # Número máximo de tuplas endereçadas por bucket
+FR = 10  # Número máximo de tuplas endereçadas por bucket
 
 total_collisions = 0
 total_overflows = 0
@@ -20,7 +20,7 @@ def calculate_number_of_buckets(word_count: int):
     # Número de buckets > Número de palavras / Tuplas por bucket
 
     num_buckets = (word_count // FR) + 1
-    num_buckets = next_prime(NUM_BUCKETS)
+    num_buckets = next_prime(num_buckets)
 
     return num_buckets
 
@@ -42,18 +42,19 @@ def next_prime(n):
 
 
 def hash_function(word: str):
+    global NUM_BUCKETS
     LARGE_PRIME_NUMBER = 65521
 
     checksum = 0
 
     for i in range(len(word)):
-        checksum *= LARGE_PRIME_NUMBER
-        checksum += ord(word[i].lower())
+        # checksum += ord(word[i].lower())
+        checksum *= LARGE_PRIME_NUMBER * ord(word[i].lower())
     return checksum % NUM_BUCKETS
 
 
 def add_to_bucket(index, info_tuple):
-    global total_collisions, total_overflows
+    global total_collisions, total_overflows, FR
     bucket = hash_table[index]
 
     # Colisão: ocorre quando é adicionada uma tupla a um bucket não vazio
@@ -68,7 +69,7 @@ def add_to_bucket(index, info_tuple):
 
 
 def load_words(file_path):
-    global hash_table, NUM_BUCKETS, NUM_PAGES, PAGE_SIZE, total_collisions, total_overflows, pages
+    global hash_table, NUM_BUCKETS, NUM_PAGES, PAGE_SIZE, total_collisions, total_overflows, pages, FR
     words = []
 
     try:
@@ -87,7 +88,7 @@ def load_words(file_path):
                 page_index += 1
             pages[page_index].append(word)
 
-        # Calculate number of buckets
+
         NUM_BUCKETS = calculate_number_of_buckets(len(words))
         hash_table = [[] for _ in range(NUM_BUCKETS)]
         
@@ -157,6 +158,27 @@ def table_scan():
             f"Palavra '{word}' não encontrada.\nCusto da busca: {scan_cost} leituras.",
         )
 
+def calc_colission_rate():
+    global hash_table
+    counter = 0
+    for bucket in hash_table:
+        if len(bucket) > 1:
+            counter += 1
+
+    return counter / len(hash_table) * 100
+
+def calc_overflow_rate():
+    global hash_table
+
+    counter = 0
+
+    for bucket in hash_table:
+        if len(bucket) > FR:
+            counter += 1
+
+    return counter / len(hash_table) * 100
+      
+
 
 def initialize_load():
     global PAGE_SIZE
@@ -165,12 +187,8 @@ def initialize_load():
         if PAGE_SIZE <= 0:
             raise ValueError("O tamanho da página deve ser maior que zero.")
         load_words("words.txt")
-        collision_rate = (
-            (total_collisions / len(hash_table)) * 100 if len(hash_table) > 0 else 0
-        )
-        overflow_rate = (
-            (total_overflows / len(hash_table)) * 100 if len(hash_table) > 0 else 0
-        )
+        collision_rate = calc_colission_rate()
+        overflow_rate = calc_overflow_rate()
         messagebox.showinfo(
             "Estatísticas",
             f"Taxa de colisões: {collision_rate:.2f}%\nTaxa de overflows: {overflow_rate:.2f}%",
